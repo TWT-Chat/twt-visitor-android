@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TWT Visitor SDK Sample</string>
+    <string name="sample_description">Visitor Android Maven SDK</string>
+    <string name="sample_ready">Edit the parameters, then open with custom values</string>
+    <string name="open_default">Open default visitor page</string>
+    <string name="open_custom">Open with custom parameters</string>
+    <string name="custom_title">Online support</string>
+    <string name="custom_url_label">Visitor HTTPS URL (host required, path optional)</string>
+    <string name="custom_url_hint">For example: https://example.com/direct/app or https://example.com/?appid=twt_demo</string>
+    <string name="custom_query_label">Query parameters (key=value&amp;…)</string>
+    <string name="custom_query_hint">For example: name=Alex&amp;source=android</string>
+    <string name="custom_language_label">Initial language</string>
+    <string name="custom_theme_label">Initial theme</string>
+    <string name="custom_direct_chat_label">Direct chat ID (optional)</string>
+    <string name="custom_direct_chat_hint">Enter a chatid; leave empty to skip the direct chat</string>
+    <string name="custom_selection_error">Select a valid language and theme</string>
+    <string name="custom_opening">Opening the custom visitor page…</string>
+    <string name="custom_validation_error">Invalid parameters: %1$s</string>
+    <string name="clear_site">Clear visitor site data</string>
+    <string name="clear_running">Clearing…</string>
+</resources>
