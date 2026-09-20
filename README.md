@@ -1,14 +1,10 @@
 # TWT Visitor Android SDK
 
-The SDK opens a visitor chat page in a native WebView. The host application must provide an HTTPS URL; no test URL is bundled.
+Embed a visitor chat page in your app with a native WebView.
 
-## Requirements and installation
+**Version:** 0.0.1 · **minSdk:** 23 · **License:** Proprietary
 
-Android minSdk 23; compileSdk/targetSdk 36 recommended; JDK 17, Gradle 8.14, AGP 8.13.2, Kotlin 2.2.20.
-
-Source: https://github.com/TWT-Chat/twt-visitor-android
-
-The artifact is on Maven Central. Hosts only need `mavenCentral()`:
+## Installation
 
 ```kotlin
 dependencyResolutionManagement {
@@ -17,68 +13,94 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-dependencies { implementation("io.github.twt-chat:visitor-sdk:0.0.1") }
+
+dependencies {
+    implementation("io.github.twt-chat:visitor-sdk:0.0.1")
+}
 ```
 
-Flutter hosts using RepositoriesMode.PREFER_SETTINGS must also keep https://storage.googleapis.com/download.flutter.io.
+The SDK already merges `INTERNET`, `RECORD_AUDIO`, and `CAMERA` (`required=false`). On Android 9 and below, add `WRITE_EXTERNAL_STORAGE` if you save downloads to public Downloads.
 
 ## Quick start
 
+The visitor URL must be HTTPS. Put business parameters in `query` — do not build a query string yourself, and do not put secrets in the URL.
+
 ```kotlin
-val handle = TwtVisitorSdk.start(this, VisitorConfig(
-    url = "https://visitor.example.com/direct/app",
-    query = mapOf("visitor_id" to "user-123", "source" to "android"),
-    isApp = true, title = "Online support",
-    language = VisitorLanguage.EN, theme = VisitorTheme.SYSTEM,
-    directChatId = null, newMessageSoundMode = VisitorMessageSoundMode.WEB,
-), object : VisitorBridgeListener {
-    override fun onDownloadRequested(request: VisitorDownloadRequest) {
-        // Download, then call handle.reportDownloadStatus(...)
-    }
-})
+val handle = TwtVisitorSdk.start(
+    this,
+    VisitorConfig(url = "URL from the console"),
+)
 ```
 
-start launches VisitorActivity and returns a session handle. A non-Activity Context receives FLAG_ACTIVITY_NEW_TASK automatically.
+`start` opens `VisitorActivity` and returns a `VisitorHandle`. A non-Activity `Context` gets `FLAG_ACTIVITY_NEW_TASK` automatically. Listener callbacks run on the main thread and are cleared when the activity is destroyed.
 
-## VisitorConfig
+## Configuration
 
-| Field | Meaning |
+| Field | Description |
 | --- | --- |
-| url | Required HTTPS URL; HTTP/file/custom schemes are rejected. |
-| query | Business parameters, UTF-8 percent-encoded by the SDK; do not build a ? string manually. |
-| isApp | Adds is_app=1 and shows a close button when true. |
-| title | Native top title; an empty value uses the web title. |
-| language | VisitorLanguage written to lang; default ZH_CN. |
-| theme | LIGHT, DARK or SYSTEM written to theme. |
-| directChatId | Direct conversation ID, written as direct=1&chatid=.... |
-| newMessageSoundMode | WEB or NATIVE. |
+| `url` | HTTPS URL from the console |
+| `query` | Business parameters, UTF-8 encoded by the SDK |
+| `isApp` | Adds `is_app=1` and shows a close button |
+| `title` | Native title; empty uses the page title |
+| `language` | `en`, `zh-cn`, `zh-tw`, `ja`, `ko`, `de`, `fr`, `pt`, `ru`, `es`, `vi`, `th`, `id`, `ms`, `tl` |
+| `theme` | `light` / `dark` / `system`. Runtime `setTheme` accepts only `light` / `dark` |
+| `directChatId` | Opens a conversation (`direct=1&chatid=`) |
+| `newMessageSoundMode` | `web` or `native` |
 
-Typed fields override same-name query keys. Never send passwords, AppSecret, cookies or long-lived tokens.
+Typed fields (`isApp`, `language`, `theme`, `directChatId`) override the same keys in `query`. Do not put `is_app` / `lang` / `theme` / `direct` / `chatid` in `query`.
 
-## API, callbacks and lifecycle
+## Query parameters
 
-- TwtVisitorSdk.start(context[, config[, listener]]) creates a session.
-- VisitorHandle.setTheme("light"/"dark") changes the WebView theme without reload.
-- VisitorHandle.reportDownloadStatus sends VisitorDownloadStatus (started/completed/failed/cancelled; requestId must match).
-- VisitorHandle.close() finishes the Activity; the handle is invalid afterwards.
-- TwtVisitorSdk.clearSiteData(url, callback) asynchronously clears WebView data on the main thread; close and destroy every session for the host first.
+`query` is an opaque map: the SDK only encodes it. Anonymous visitors can omit it.
 
-VisitorBridgeListener is registered in start, called on the main thread, and unregistered when the Activity is destroyed: onDownloadRequested (requestId/url/type/fileName/mimeType/callback), onNewMessage (messageId/chatId/messageType/timestamp/isForeground), onBack (true means consumed; false permits closing), and onPermissionResult (requestId/granted/canAskAgain/resources). Deduplicate by requestId/messageId and mark unfinished downloads failed when the page is destroyed.
-
-## Permissions, navigation and storage
-
-The merged manifest contains INTERNET and RECORD_AUDIO. Only microphone requests from same-origin HTTPS pages enter runtime permission flow; camera and video requests are always denied. Android 9 and older may require host WRITE_EXTERNAL_STORAGE for public Downloads.
-
-File inputs support single/multiple selection. Same-origin top-level navigation stays in the container; cross-origin HTTPS opens the system browser. HTTP, file, javascript and custom schemes are rejected. Cookies, Local Storage and IndexedDB persist by default; third-party cookies and mixed content are disabled.
-
-## Cleanup, troubleshooting and release checks
-
-clearSiteData returns SUCCESS, INVALID_URL, UNSUPPORTED, IN_USE or FAILED. IN_USE means an active session still uses the host. For account switching: close → wait for onDestroy → clear successfully → open the next account.
-
-```bash
-./gradlew :visitor-sdk:assembleRelease
-./gradlew :sample:assembleDebug
-./gradlew lint
+```kotlin
+query = mapOf(
+    "sbs" to "user-123",
+    "sbs_mm" to signature,
+    "ranstr" to randomStr,
+    "name" to "Zhang San",
+)
 ```
 
-On a real device verify microphone permission, file upload/download reporting, WSS, background/lock-screen behavior, weak-network retry, back navigation, external links and account isolation. There is no screen-capture bridge, and image clipboard support is not guaranteed on every system WebView.
+| Parameter | Required | Meaning |
+| --- | --- | --- |
+| `sbs` | When binding a user | Unique business-user id; the visitor page uses it to identify a logged-in customer |
+| `sbs_mm` | If `sbs` is set | Signature of `sbs` |
+| `ranstr` | If signing | Random string used in the signature |
+| `name` | Optional | Visitor name shown in the agent console |
+| `nickname` | Optional | Visitor nickname |
+| `email` | Optional | Visitor email |
+| `phone` | Optional | Visitor phone |
+| `customer_remark` | Optional | Remark sent with login |
+| `ext_fk_id` | Optional | Existing visitor id, to resume that visitor's history |
+| `referer` | Optional | Source page URL (also accepts `referer_url`) |
+| `source_title` | Optional | Source page title |
+
+Do not send `visitor_id` or `source=android`. Mark an in-app open with `isApp = true`.
+
+## API
+
+| Method | Description |
+| --- | --- |
+| `TwtVisitorSdk.start(context[, config[, listener]])` | Open a session |
+| `handle.setTheme("light" \| "dark")` | Change theme without reload |
+| `handle.reportDownloadStatus(status)` | Report download `started` / `completed` / `failed` / `cancelled` |
+| `handle.close()` | Finish the activity |
+| `TwtVisitorSdk.clearSiteData(url, callback)` | Clear WebView data for the host |
+
+`clearSiteData` returns `SUCCESS`, `INVALID_URL`, `UNSUPPORTED`, `IN_USE`, or `FAILED`. Switch accounts with: `close` → wait for `onDestroy` → clear → open the next account.
+
+## Behavior
+
+- Same-origin HTTPS stays in the WebView; cross-origin HTTPS opens in the system browser; other schemes are blocked.
+- Same-origin HTTPS microphone and camera capture can request system permission. Cross-origin requests are denied.
+- Cookies, Local Storage, and IndexedDB persist. Third-party cookies and mixed content are off.
+- File inputs use the system picker (single or multiple).
+- Downloads from the WebView and from the page are both delivered to `onDownloadRequested`. Mark unfinished downloads `failed` when the page is destroyed.
+- Back is offered to the page first, then `onBack()`, then the activity closes.
+
+## Links
+
+- [Maven Central](https://central.sonatype.com/artifact/io.github.twt-chat/visitor-sdk)
+- [iOS SDK](https://github.com/TWT-Chat/twt-visitor-ios)
+- [Flutter plugin](https://github.com/TWT-Chat/visitor_flutter)

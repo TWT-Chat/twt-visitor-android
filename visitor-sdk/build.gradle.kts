@@ -48,9 +48,16 @@ dependencies {
     implementation("androidx.webkit:webkit:1.15.0")
 }
 
-// Central 要 javadoc 附件；Kotlin Android 库用空 jar 即可。
+// Central 要 javadoc 附件；Kotlin Android 库用占位页即可。
 val javadocJar by tasks.registering(Jar::class) {
     archiveClassifier.set("javadoc")
+    val stub = layout.buildDirectory.dir("tmp/javadoc")
+    from(stub)
+    doFirst {
+        val index = stub.get().asFile.resolve("index.html")
+        index.parentFile.mkdirs()
+        index.writeText("<html><body><p>TWT Visitor SDK</p></body></html>\n")
+    }
 }
 
 publishing {
