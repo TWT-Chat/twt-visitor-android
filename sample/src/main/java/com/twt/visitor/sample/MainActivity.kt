@@ -1,6 +1,7 @@
 package com.twt.visitor.sample
 
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
@@ -13,6 +14,7 @@ import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.WindowCompat
 import com.twt.visitor.sdk.TwtVisitorSdk
 import com.twt.visitor.sdk.VisitorLanguage
 import com.twt.visitor.sdk.VisitorSiteDataClearCallback
@@ -29,7 +31,11 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(createContent())
+        // targetSdk 35+ 默认 edge-to-edge：显式关闭 fit，再用 insets 把内容放回状态栏下面。
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val content = createContent()
+        setContentView(content)
+        content.applySystemBarInsets()
     }
 
     private fun createContent(): View {
@@ -89,11 +95,21 @@ class MainActivity : Activity() {
 
             addView(Button(context).apply {
                 text = getString(R.string.open_default)
-                setOnClickListener { TwtVisitorSdk.start(this@MainActivity) }
+                setOnClickListener {
+                    openEmbedded(
+                        VisitorSampleFormValues(
+                            url = com.twt.visitor.sdk.VisitorConfig.DEFAULT_VISITOR_URL,
+                        ),
+                    )
+                }
             }, buttonLayoutParams())
             addView(Button(context).apply {
                 text = getString(R.string.open_custom)
                 setOnClickListener { openCustomVisitor() }
+            }, buttonLayoutParams())
+            addView(Button(context).apply {
+                text = getString(R.string.open_bare)
+                setOnClickListener { openBareVisitor() }
             }, buttonLayoutParams())
             addView(Button(context).apply {
                 text = getString(R.string.clear_site)
@@ -118,40 +134,61 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun openCustomVisitor() {
+    private fun formValues(): VisitorSampleFormValues? {
         val language = VisitorLanguage.entries.getOrNull(languageInput.selectedItemPosition)
         val theme = VisitorTheme.entries.getOrNull(themeInput.selectedItemPosition)
         if (language == null || theme == null) {
             showStatus(getString(R.string.custom_selection_error), isError = true)
-            return
+            return null
         }
+        return VisitorSampleFormValues(
+            url = urlInput.text.toString(),
+            query = queryInput.text.toString(),
+            language = language,
+            theme = theme,
+            directChatId = directChatIdInput.text.toString(),
+        )
+    }
 
+    /** 裸页面直接交给 SDK 的 Activity；它同样要合法 URL，不合法就在表单里报错而不是崩溃。 */
+    private fun openBareVisitor() {
+        val values = formValues() ?: return
         try {
-            val config = VisitorSampleConfigParser.parse(
-                VisitorSampleFormValues(
-                    url = urlInput.text.toString(),
-                    query = queryInput.text.toString(),
-                    language = language,
-                    theme = theme,
-                    directChatId = directChatIdInput.text.toString(),
-                    title = getString(R.string.custom_title),
-                ),
-            )
-            showStatus(getString(R.string.custom_opening), isError = false)
-            TwtVisitorSdk.start(this, config)
+            TwtVisitorSdk.start(this, VisitorSampleConfigParser.parse(values))
         } catch (error: IllegalArgumentException) {
             showStatus(
                 getString(R.string.custom_validation_error, error.message ?: "Invalid parameters"),
                 isError = true,
             )
-        } catch (error: RuntimeException) {
-            // Keep the sample resilient if a future SDK release rejects a value
-            // that passed the sample-side validation.
+        }
+    }
+
+    private fun openCustomVisitor() {
+        val values = formValues() ?: return
+        openEmbedded(values)
+    }
+
+    /** 打开示例自己的页面：状态栏 + 返回键和标题都由宿主绘制；参数不合法就在表单里报错。 */
+    private fun openEmbedded(values: VisitorSampleFormValues) {
+        try {
+            // Validate here so malformed input is reported in the form instead of the next screen.
+            VisitorSampleConfigParser.parse(values)
+        } catch (error: IllegalArgumentException) {
             showStatus(
                 getString(R.string.custom_validation_error, error.message ?: "Invalid parameters"),
                 isError = true,
             )
+            return
         }
+        showStatus(getString(R.string.custom_opening), isError = false)
+        startActivity(
+            Intent(this, EmbeddedVisitorActivity::class.java)
+                .putExtra(EmbeddedVisitorActivity.EXTRA_URL, values.url)
+                .putExtra(EmbeddedVisitorActivity.EXTRA_QUERY, values.query)
+                .putExtra(EmbeddedVisitorActivity.EXTRA_LANGUAGE, values.language.ordinal)
+                .putExtra(EmbeddedVisitorActivity.EXTRA_THEME, values.theme.ordinal)
+                .putExtra(EmbeddedVisitorActivity.EXTRA_DIRECT_CHAT_ID, values.directChatId),
+        )
     }
 
     private fun fieldLabel(label: Int): TextView {

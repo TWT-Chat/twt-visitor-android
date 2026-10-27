@@ -5,7 +5,8 @@
     <string name="sample_ready">Edit the parameters, then open with custom values</string>
     <string name="open_default">Open default visitor page</string>
     <string name="open_custom">Open with custom parameters</string>
-    <string name="custom_title">Online support</string>
+    <string name="open_bare">Open bare full-screen page (SDK activity)</string>
+    <string name="embedded_title">Online support</string>
     <string name="custom_url_label">Visitor HTTPS URL (host required, path optional)</string>
     <string name="custom_url_hint">For example: https://example.com/direct/app or https://example.com/?appid=twt_demo</string>
     <string name="custom_query_label">Query parameters (key=value&amp;…)</string>

@@ -8,7 +8,6 @@ package com.twt.visitor.sdk
 data class VisitorConfig @JvmOverloads constructor(
     val url: String = DEFAULT_VISITOR_URL,
     val query: Map<String, String> = emptyMap(),
-    val title: String? = null,
     val language: VisitorLanguage = VisitorLanguage.ZH_CN,
     val theme: VisitorTheme = VisitorTheme.SYSTEM,
     val directChatId: String? = null,

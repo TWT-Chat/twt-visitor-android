@@ -15,18 +15,19 @@ import com.twt.visitor.sdk.internal.VisitorSessionRegistryHolder
 /** Public entry point of the Android visitor SDK. */
 object TwtVisitorSdk {
     private val listeners = ConcurrentHashMap<String, VisitorBridgeListener>()
-    private val activities = ConcurrentHashMap<String, VisitorActivity>()
+    private val hosts = ConcurrentHashMap<String, VisitorSessionHost>()
 
     /** Handle for an active visitor session; each page owns its own listener/sessionId. */
     class VisitorHandle internal constructor(val sessionId: String) {
-        fun setTheme(theme: String) { activities[sessionId]?.setTheme(theme) }
-        fun reportDownloadStatus(status: VisitorDownloadStatus) { activities[sessionId]?.reportDownloadStatus(status) }
-        fun close() { activities[sessionId]?.finish() }
+        fun setTheme(theme: String) { hosts[sessionId]?.setTheme(theme) }
+        fun reportDownloadStatus(status: VisitorDownloadStatus) { hosts[sessionId]?.reportDownloadStatus(status) }
+        /** Finishes the standalone activity; embedded views are removed by their host. */
+        fun close() { (hosts[sessionId] as? VisitorActivity)?.finish() }
     }
 
     internal fun listener(sessionId: String): VisitorBridgeListener? = listeners[sessionId]
-    internal fun registerActivity(sessionId: String, activity: VisitorActivity) { activities[sessionId] = activity }
-    internal fun unregister(sessionId: String) { activities.remove(sessionId); listeners.remove(sessionId) }
+    internal fun registerActivity(sessionId: String, host: VisitorSessionHost) { hosts[sessionId] = host }
+    internal fun unregister(sessionId: String) { hosts.remove(sessionId); listeners.remove(sessionId) }
     /** Opens the chat page with the default configuration; the host should pass its own visitor URL. */
     @JvmStatic
     fun start(context: Context): VisitorHandle {
@@ -47,12 +48,32 @@ object TwtVisitorSdk {
         val intent = Intent(context, VisitorActivity::class.java).apply {
             putExtra(VisitorActivity.EXTRA_SESSION_ID, sessionId)
             putExtra(VisitorActivity.EXTRA_URL, VisitorUrlPolicy.buildUrl(config))
-            config.title?.let { putExtra(VisitorActivity.EXTRA_TITLE, it) }
             putExtra(VisitorActivity.EXTRA_SOUND_MODE, config.newMessageSoundMode.queryValue)
             if (context !is Activity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(intent)
         return VisitorHandle(sessionId)
+    }
+
+    /**
+     * Creates a bare visitor WebView for the host's own screen: the SDK draws no title bar, so the
+     * host puts it under its own toolbar and reads the page title from [VisitorBridgeListener.onTitleChanged].
+     * The returned view must be added to the host layout; the host also forwards back, pause/resume,
+     * onDestroy, onActivityResult, and onRequestPermissionsResult to it (see the sample).
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun embed(activity: Activity, config: VisitorConfig, listener: VisitorBridgeListener? = null): VisitorView {
+        val sessionId = UUID.randomUUID().toString()
+        if (listener != null) listeners[sessionId] = listener
+        val view = VisitorView(activity)
+        registerActivity(sessionId, object : VisitorSessionHost {
+            override fun setTheme(theme: String) = view.setTheme(theme)
+
+            override fun reportDownloadStatus(status: VisitorDownloadStatus) = view.reportDownloadStatus(status)
+        })
+        view.bind(sessionId, VisitorUrlPolicy.buildUrl(config), config.newMessageSoundMode.queryValue)
+        return view
     }
 
     /** Asynchronously clears persistent website data for the target WebView site. */

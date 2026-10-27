@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="twt_visitor_back">Back</string>
-    <string name="twt_visitor_back_symbol" translatable="false">‹</string>
-    <string name="twt_visitor_default_title">Online support</string>
     <string name="twt_visitor_load_error">Failed to load the page. Check your network and try again.</string>
     <string name="twt_visitor_retry">Retry</string>
 </resources>

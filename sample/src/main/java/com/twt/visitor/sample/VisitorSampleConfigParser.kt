@@ -16,7 +16,6 @@ data class VisitorSampleFormValues(
     val language: VisitorLanguage = VisitorLanguage.ZH_CN,
     val theme: VisitorTheme = VisitorTheme.SYSTEM,
     val directChatId: String = "",
-    val title: String? = null,
 )
 
 /**
@@ -43,7 +42,6 @@ object VisitorSampleConfigParser {
         return VisitorConfig(
             url = url,
             query = query,
-            title = values.title,
             language = values.language,
             theme = values.theme,
             directChatId = directChatId,

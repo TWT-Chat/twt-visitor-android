@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "io.github.twt-chat"
-version = "0.0.1"
+version = "0.0.2"
 
 android {
     namespace = "com.twt.visitor.sdk"

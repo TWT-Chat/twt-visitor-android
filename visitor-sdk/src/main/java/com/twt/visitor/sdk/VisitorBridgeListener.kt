@@ -7,6 +7,9 @@ interface VisitorBridgeListener {
     fun onNewMessage(message: VisitorNewMessage) { onNewMessage() }
     fun onBack(): Boolean = false
     fun onPermissionResult(result: VisitorPermissionResult) {}
+
+    /** Web page title; the SDK renders no title bar, so the host shows it in its own UI. */
+    fun onTitleChanged(title: String) {}
 }
 
 data class VisitorNewMessage(
