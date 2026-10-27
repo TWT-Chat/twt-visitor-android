@@ -5,7 +5,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
 /**
- * targetSdk 35+ 强制 edge-to-edge，示例自己把系统栏避让补回来，保持「状态栏 + 导航栏 + 内容」的正常层级。
+ * targetSdk 35+ forces edge-to-edge, so the sample adds the system bar insets back to keep the normal status bar / navigation bar / content layering.
  */
 internal fun View.applySystemBarInsets() {
     val original = listOf(paddingLeft, paddingTop, paddingRight, paddingBottom)

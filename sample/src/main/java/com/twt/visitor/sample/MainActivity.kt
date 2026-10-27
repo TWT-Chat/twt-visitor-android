@@ -31,7 +31,7 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // targetSdk 35+ 默认 edge-to-edge：显式关闭 fit，再用 insets 把内容放回状态栏下面。
+        // targetSdk 35+ is edge-to-edge by default: stop fitting the system windows and put the content back below the status bar with insets.
         WindowCompat.setDecorFitsSystemWindows(window, false)
         val content = createContent()
         setContentView(content)
@@ -150,7 +150,7 @@ class MainActivity : Activity() {
         )
     }
 
-    /** 裸页面直接交给 SDK 的 Activity；它同样要合法 URL，不合法就在表单里报错而不是崩溃。 */
+    /** Hand the bare page to the SDK activity; it needs a valid URL too, so report bad input in the form instead of crashing. */
     private fun openBareVisitor() {
         val values = formValues() ?: return
         try {
@@ -168,7 +168,7 @@ class MainActivity : Activity() {
         openEmbedded(values)
     }
 
-    /** 打开示例自己的页面：状态栏 + 返回键和标题都由宿主绘制；参数不合法就在表单里报错。 */
+    /** Open the sample's own page: the host draws the back button and title; report invalid input in the form. */
     private fun openEmbedded(values: VisitorSampleFormValues) {
         try {
             // Validate here so malformed input is reported in the form instead of the next screen.

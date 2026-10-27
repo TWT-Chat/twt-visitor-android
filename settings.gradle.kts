@@ -10,8 +10,9 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
-        // 本地发布仓库要排在 mavenCentral 之前：sample 的 preBuild 会把当前源码发到
-        // repository/，排后面时会被 Central 上同版本号 0.0.1 的旧产物盖掉。
+        // The local publish repository must come before mavenCentral: sample's preBuild publishes
+        // the current sources into repository/, and a later position lets the stale 0.0.1 artifact
+        // on Central shadow it.
         maven(url = uri("repository"))
         mavenCentral()
     }

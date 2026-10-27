@@ -48,7 +48,7 @@ dependencies {
     implementation("androidx.webkit:webkit:1.15.0")
 }
 
-// Central 要 javadoc 附件；Kotlin Android 库用占位页即可。
+// Central requires a javadoc artifact; a placeholder page is enough for a Kotlin Android library.
 val javadocJar by tasks.registering(Jar::class) {
     archiveClassifier.set("javadoc")
     val stub = layout.buildDirectory.dir("tmp/javadoc")
@@ -101,7 +101,7 @@ publishing {
             name = "Local"
             url = uri(rootProject.layout.projectDirectory.dir("repository"))
         }
-        // 签名后的包先落到本地 staging，再由 tools/push.sh maven 上传 Central Portal。
+        // Signed artifacts land in local staging first, then tools/push.sh maven uploads them to Central Portal.
         maven {
             name = "SonatypeStaging"
             url = uri(rootProject.layout.buildDirectory.dir("staging-deploy"))

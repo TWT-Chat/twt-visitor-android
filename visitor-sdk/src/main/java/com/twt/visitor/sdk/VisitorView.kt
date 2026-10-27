@@ -304,7 +304,7 @@ class VisitorView internal constructor(context: Context) : FrameLayout(context) 
 
     private inner class VisitorChromeClient : WebChromeClient() {
         override fun onReceivedTitle(view: WebView, title: String?) {
-            // 标题由宿主自行展示，SDK 只负责把网页标题透传出去。
+            // The host renders the title; the SDK only forwards the web page title.
             if (!title.isNullOrBlank()) TwtVisitorSdk.listener(sessionId)?.onTitleChanged(title)
         }
 

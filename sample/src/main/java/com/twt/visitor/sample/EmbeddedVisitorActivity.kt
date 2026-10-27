@@ -17,8 +17,8 @@ import com.twt.visitor.sdk.VisitorTheme
 import com.twt.visitor.sdk.VisitorView
 
 /**
- * 示例：SDK提供裸 WebView，返回键和标题由宿主自己画在这条工具栏上。
- * 想复用 SDK 的独立页（无标题栏）就直接 [TwtVisitorSdk.start]。
+ * Sample: the SDK provides a bare WebView, so the host draws the back button and title on this toolbar.
+ * Use [TwtVisitorSdk.start] instead to open the SDK's own standalone page (no title bar).
  */
 class EmbeddedVisitorActivity : Activity() {
     private lateinit var visitorView: VisitorView
@@ -60,7 +60,7 @@ class EmbeddedVisitorActivity : Activity() {
             LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f),
         )
         setContentView(root)
-        // 状态栏让出给系统，工具栏和网页都在它下面；底部再避让导航栏。
+        // Leave the status bar to the system so the toolbar and page sit below it, and inset the bottom for the navigation bar.
         root.applySystemBarInsets()
     }
 
@@ -87,14 +87,14 @@ class EmbeddedVisitorActivity : Activity() {
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             }
             addView(titleView)
-            // 右侧放一个和返回键等宽的占位，标题才真正落在屏幕中线上。
+            // Add a spacer as wide as the back button so the title really lands on the screen centre line.
             addView(View(this@EmbeddedVisitorActivity), LinearLayout.LayoutParams(dp(48), dp(1)))
         }
     }
 
     @Deprecated("Deprecated in Android")
     override fun onBackPressed() {
-        // 先交给网页，再交给宿主，最后退出这个页面。
+        // Ask the page first, then the host, and only then finish this activity.
         visitorView.handleBack(::finish)
     }
 

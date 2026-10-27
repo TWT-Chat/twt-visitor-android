@@ -33,7 +33,7 @@ kotlin {
 
 dependencies {
     implementation("io.github.twt-chat:visitor-sdk:0.0.2")
-    // 示例自己处理系统栏避让（targetSdk 35+ 强制 edge-to-edge）。
+    // The sample handles its own system bar insets (targetSdk 35+ forces edge-to-edge).
     implementation("androidx.core:core-ktx:1.17.0")
 }
 
