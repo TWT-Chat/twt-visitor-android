@@ -10,9 +10,8 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
-        // The local publish repository must come before mavenCentral: sample's preBuild publishes
-        // the current sources into repository/, and a later position lets the stale 0.0.1 artifact
-        // on Central shadow it.
+        // Staging directory of the Maven Central publication (tools/push.sh maven android uploads from it);
+        // it stays first so a locally published artifact wins over the same version on Central.
         maven(url = uri("repository"))
         mavenCentral()
     }

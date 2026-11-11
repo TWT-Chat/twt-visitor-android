@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
@@ -26,6 +27,7 @@ import android.widget.Button
 import android.widget.FrameLayout
 import com.twt.visitor.sdk.internal.FileChooserResultParser
 import com.twt.visitor.sdk.internal.PendingFileChooser
+import com.twt.visitor.sdk.internal.VisitorKeyboardAvoidance
 import com.twt.visitor.sdk.internal.VisitorNavigation
 import com.twt.visitor.sdk.internal.VisitorNavigationPolicy
 import com.twt.visitor.sdk.internal.VisitorPermissionPolicy
@@ -75,6 +77,8 @@ class VisitorView internal constructor(context: Context) : FrameLayout(context) 
         errorView = findViewById(R.id.twt_visitor_error)
         controller = VisitorWebViewController(AndroidWebViewPort(webView))
         findViewById<Button>(R.id.twt_visitor_retry).setOnClickListener { loadTarget() }
+        // Pad this container, never the WebView: a WebView lays its page out to the full view size and ignores padding.
+        VisitorKeyboardAvoidance.apply(this)
     }
 
     /** Binds the view to a session and loads the validated URL. Called by [TwtVisitorSdk.embed]. */
@@ -87,6 +91,7 @@ class VisitorView internal constructor(context: Context) : FrameLayout(context) 
             showError()
             return
         }
+        applyPageBackground(Uri.parse(targetUrl).getQueryParameter("theme"))
         sessionToken = VisitorSessionRegistryHolder.shared.acquire(Uri.parse(targetUrl).host.orEmpty())
         if (restoredState == null || webView.restoreState(restoredState) == null) loadTarget()
     }
@@ -118,6 +123,22 @@ class VisitorView internal constructor(context: Context) : FrameLayout(context) 
     private fun validateUrl(rawUrl: String?): String? {
         if (rawUrl.isNullOrBlank()) return null
         return runCatching { VisitorUrlPolicy.validateUrl(rawUrl) }.getOrNull()
+    }
+
+    /**
+     * A resized WebView repaints from its own background until Chromium has drawn the page again, which flashes white
+     * while the keyboard shrinks it. Painting the visitor page background instead keeps that moment invisible.
+     */
+    private fun applyPageBackground(theme: String?) {
+        val dark = when (theme) {
+            "dark" -> true
+            "light" -> false
+            else -> (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        }
+        // The visitor page paints #F5F7F9 in light mode and #191919 in dark mode; these mirror its two palettes.
+        val color = if (dark) 0xFF191919.toInt() else 0xFFF5F7F9.toInt()
+        webView.setBackgroundColor(color)
+        setBackgroundColor(color)
     }
 
     private fun loadTarget() {
@@ -186,6 +207,7 @@ class VisitorView internal constructor(context: Context) : FrameLayout(context) 
 
     internal fun setTheme(theme: String) {
         if (theme == "dark" || theme == "light") webView.post { webView.evaluateJavascript("window.AppBridge && window.AppBridge.emitEvent('themeChanged', {theme:'$theme'})", null) }
+        applyPageBackground(theme)
     }
 
     internal fun reportDownloadStatus(status: VisitorDownloadStatus) {

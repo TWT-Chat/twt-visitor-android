@@ -2,7 +2,7 @@
 
 Embed a visitor chat page in your app with a native WebView.
 
-**Version:** 0.0.2 · **minSdk:** 23 · **License:** Proprietary
+**Version:** 0.0.4 · **minSdk:** 23 · **License:** Proprietary
 
 ## Installation
 
@@ -15,7 +15,7 @@ dependencyResolutionManagement {
 }
 
 dependencies {
-    implementation("io.github.twt-chat:visitor-sdk:0.0.2")
+    implementation("io.github.twt-chat:visitor-sdk:0.0.4")
 }
 ```
 

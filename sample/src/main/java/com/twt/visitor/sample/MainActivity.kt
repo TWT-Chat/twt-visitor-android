@@ -20,7 +20,7 @@ import com.twt.visitor.sdk.VisitorLanguage
 import com.twt.visitor.sdk.VisitorSiteDataClearCallback
 import com.twt.visitor.sdk.VisitorTheme
 
-/** Demonstrates a host app that depends on the visitor SDK through its Maven coordinates. */
+/** Demonstrates a host app that depends on the visitor SDK module in this repo. */
 class MainActivity : Activity() {
     private lateinit var urlInput: EditText
     private lateinit var queryInput: EditText

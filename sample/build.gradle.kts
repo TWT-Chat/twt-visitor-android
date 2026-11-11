@@ -32,11 +32,8 @@ kotlin {
 }
 
 dependencies {
-    implementation("io.github.twt-chat:visitor-sdk:0.0.2")
+    // Build against the SDK sources in this repo so a local change shows up in the sample immediately.
+    implementation(project(":visitor-sdk"))
     // The sample handles its own system bar insets (targetSdk 35+ forces edge-to-edge).
     implementation("androidx.core:core-ktx:1.17.0")
-}
-
-tasks.named("preBuild") {
-    dependsOn(":visitor-sdk:publishReleasePublicationToLocalRepository")
 }
